@@ -1,5 +1,6 @@
 import { StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useState } from 'react';
+import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -39,10 +40,13 @@ export default function TwinPickScreen() {
     }
 
     // TODO: Appeler l'API tars avec les critères
-    Alert.alert(
-      'Recherche en cours...', 
-      `Utilisateurs: ${validUsernames.join(', ')}\nGenre: ${genre || 'Tous'}\nDurée: ${duration || 'Toutes'}`
-    );
+    router.push({
+      pathname: '/twinpick-result',
+      params: {
+        title: 'Inception', //juste test
+        posterUrl: 'https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg',
+      },
+    });
   };
 
   return (
