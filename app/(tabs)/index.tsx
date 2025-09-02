@@ -1,76 +1,264 @@
 import '../../global';
+import { useState } from 'react';
+import { router } from 'expo-router';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Switch, TextInput, Text } from 'react-native';
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+const PLATFORMS = [
+  'Netflix',
+  'Prime Video',
+  'Disney+',
+  'Canal+',
+  'Apple TV+',
+  'HBO Max',
+];
+
+const DURATION_PRESETS = [
+  { key: 'short', label: '< 90 min', min: 0, max: 89 },
+  { key: 'medium', label: '90 – 120 min', min: 90, max: 120 },
+  { key: 'long', label: '> 120 min', min: 121, max: 600 },
+] as const;
+
+type Mode = 'match' | 'party';
+type DurationKey = typeof DURATION_PRESETS[number]['key'];
 
 export default function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  const [mode, setMode] = useState<Mode>('match');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [durationKey, setDurationKey] = useState<DurationKey>('medium');
+  const [users, setUsers] = useState<string[]>(['']);
+
+  const onSubmit = () => {
+    const duration = DURATION_PRESETS.find((d) => d.key === durationKey)!;
+    router.push({
+      pathname: '/(tabs)/twinpick-result',
+      params: {
+        mode,
+        platforms: selectedPlatforms.join(','),
+        durationKey,
+        min: String(duration.min),
+        max: String(duration.max),
+        users: users.join(','),
+      },
+    });
+  };
+
+  const canSubmit = users.some(u => u.trim() !== '');
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={{
+        flexGrow: 1,
+        padding: 20,
+      }}
+    >
+      <ThemedView style={styles.header}>
         <Image
           source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          contentFit="contain"
+          style={styles.logo}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
+        <ThemedText type="title" style={styles.title}>Twin Pick</ThemedText>
+        <ThemedText type="subtitle" style={styles.subtitle}>
+          Trouvez un film qui vous met d'accord
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+
+      <ThemedView style={[styles.card, { borderColor: colors.border }]}>
+        <ThemedText style={styles.label}>Utilisateurs</ThemedText>
+        {users.map((user, index) => (
+          <TextInput
+            key={index}
+            style={styles.input}
+            placeholder={`User ${index + 1}`}
+            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            value={user}
+            onChangeText={(text) => {
+              const newUsers = [...users];
+              newUsers[index] = text;
+              setUsers(newUsers);
+            }}
+          />
+        ))}
+        <TouchableOpacity
+          onPress={() => setUsers([...users, ''])}
+          activeOpacity={0.7}
+          style={{ marginTop: 8, alignSelf: 'flex-start' }}
+        >
+          <Text style={{ color: colors.tint, fontWeight: '600' }}>Ajouter un utilisateur</Text>
+        </TouchableOpacity>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+
+      <ThemedView style={[styles.card, { borderColor: colors.border }]}>
+        <ThemedText style={styles.label}>Plateforme(s)</ThemedText>
+        <View style={styles.chipsWrap}>
+          {PLATFORMS.map((p) => {
+            const active = selectedPlatforms.includes(p);
+            return (
+              <TouchableOpacity
+                key={p}
+                style={[styles.chip, active && { backgroundColor: colors.tint, borderColor: colors.tint }]}
+                onPress={() => {
+                  setSelectedPlatforms((prev) =>
+                    prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+                  );
+                }}
+                activeOpacity={0.85}
+              >
+                <ThemedText style={[styles.chipText, active && { color: colors.background }]}>
+                  {p}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <ThemedText style={styles.helpText}>Sélectionne au moins une plateforme.</ThemedText>
       </ThemedView>
-    </ParallaxScrollView>
+
+      <ThemedView style={[styles.card, { borderColor: colors.border }]}>
+        <ThemedText style={styles.label}>Durée</ThemedText>
+        <View style={styles.segmentWrap}>
+          {DURATION_PRESETS.map((d) => {
+            const active = durationKey === d.key;
+            return (
+              <TouchableOpacity
+                key={d.key}
+                style={[styles.segment, active && { borderColor: colors.tint, backgroundColor: colors.tint }]}
+                onPress={() => setDurationKey(d.key)}
+                activeOpacity={0.85}
+              >
+                <ThemedText style={[styles.segmentText, active && { color: colors.background }]}>
+                  {d.label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ThemedView>
+
+      <View style={styles.modeRow}>
+        <ThemedText style={[styles.modeLabel, mode === 'match' && styles.modeActive]}>Match</ThemedText>
+        <Switch
+          value={mode === 'party'}
+          onValueChange={() => setMode(m => (m === 'match' ? 'party' : 'match'))}
+        />
+        <ThemedText style={[styles.modeLabel, mode === 'party' && styles.modeActive]}>Party</ThemedText>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.submitBtn, { backgroundColor: colors.tint }]}
+        onPress={onSubmit}
+        disabled={!canSubmit}
+        activeOpacity={0.9}
+      >
+        <ThemedText style={styles.submitText}>SUBMIT</ThemedText>
+      </TouchableOpacity>
+
+      <View style={{ height: 28 }} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 4,
+    gap: 6,
+  },
+  logo: { width: 96, height: 96, borderRadius: 20 },
+  title: { marginTop: 2 },
+  subtitle: { opacity: 0.8 },
+
+  card: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    marginTop: 12,
+    alignSelf: 'stretch',
+    width: '100%',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  label: { fontWeight: '700', marginBottom: 10 },
+  helpText: { opacity: 0.8, marginTop: 8, fontSize: 13 },
+  modeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    marginTop: 20,
   },
-  stepContainer: {
+  modeLabel: { opacity: 0.8, fontWeight: '600' },
+  modeActive: { opacity: 1 },
+
+  chipsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 8,
+    alignSelf: 'stretch',
+    width: '100%',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(127,127,127,0.12)',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  chipText: { fontWeight: '600' },
+
+  segmentWrap: {
+    flexDirection: 'row',
+    gap: 8,
+    alignSelf: 'stretch',
+    width: '100%',
+  },
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: 'rgba(127,127,127,0.12)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  segmentText: { fontWeight: '700' },
+
+  submitBtn: {
+    marginTop: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+  },
+  submitText: { color: '#000', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    marginBottom: 12,
   },
 });
