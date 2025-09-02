@@ -40,15 +40,15 @@ const movieList: Movie[] = [
 
 const Party = () => {
   const { width, height } = useWindowDimensions();
-  const [movies, setMovies] = useState(movieList);
+  const [ movies, setMovies ] = useState<Movie[]>(movieList);
+  const [ socketId, setSocketId ] = useState<string>();
   const position = useRef(new Animated.Value(0)).current;
 
   const navigation = useNavigation();
   const ws = useRef<WebSocket | null>(null);
 
-  // --- Connexion WS ---
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:8080/ws");
+    ws.current = new WebSocket("ws://localhost:8081/ws");
 
     ws.current.onopen = () => console.log("✅ WS connected");
 
@@ -57,9 +57,9 @@ const Party = () => {
         const msg = JSON.parse(event.data);
         console.log("📩 message:", msg);
 
-        if (msg.type === "MovieFound") {
-          navigation.navigate("ResultScreen", { movie: msg.data });
-        }
+        // if (msg.type === "MovieFound") {
+        //   navigation.navigate("ResultScreen", { movie: msg.data });
+        // }
       } catch (e) {
         console.error("WS parse error:", e);
       }
@@ -87,10 +87,13 @@ const Party = () => {
         return updated;
       });
 
-      socket.emit("vote", {
-        id: currentMovie.id,
-        wantToWatch: isValid,
-      });
+    ws.current?.send(
+      JSON.stringify({
+        "filmId": currentMovie.id,
+        "wantToWatch": isValid,
+        "socketId": socketId,
+      })
+    );
 
       position.setValue(0);
     });
