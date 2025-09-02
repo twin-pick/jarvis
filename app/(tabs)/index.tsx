@@ -18,6 +18,15 @@ const PLATFORMS = [
   'HBO Max',
 ];
 
+const GENRES = [
+  'Action',
+  'Comedy',
+  'Drama',
+  'Romance',
+  'Sci-Fi',
+  'Horror',
+];
+
 const DURATION_PRESETS = [
   { key: 'short', label: '< 90 min', min: 0, max: 89 },
   { key: 'medium', label: '90 – 120 min', min: 90, max: 120 },
@@ -35,6 +44,7 @@ export default function HomeScreen() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [durationKey, setDurationKey] = useState<DurationKey>('medium');
   const [users, setUsers] = useState<string[]>(['']);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   const onSubmit = () => {
     const duration = DURATION_PRESETS.find((d) => d.key === durationKey)!;
@@ -47,6 +57,7 @@ export default function HomeScreen() {
         min: String(duration.min),
         max: String(duration.max),
         users: users.join(','),
+        genres: selectedGenres.join(','),
       },
     });
   };
@@ -69,12 +80,12 @@ export default function HomeScreen() {
         />
         <ThemedText type="title" style={styles.title}>Twin Pick</ThemedText>
         <ThemedText type="subtitle" style={styles.subtitle}>
-          Trouvez un film qui vous met d'accord
+          Find a movie that suits everyone
         </ThemedText>
       </ThemedView>
 
       <ThemedView style={[styles.card, { borderColor: colors.border }]}>
-        <ThemedText style={styles.label}>Utilisateurs</ThemedText>
+        <ThemedText style={styles.label}>Users</ThemedText>
         {users.map((user, index) => (
           <TextInput
             key={index}
@@ -89,17 +100,39 @@ export default function HomeScreen() {
             }}
           />
         ))}
+        <ThemedText style={[styles.label, { marginTop: 12 }]}>Genres</ThemedText>
+        <View style={styles.chipsWrap}>
+          {GENRES.map((g) => {
+            const active = selectedGenres.includes(g);
+            return (
+              <TouchableOpacity
+                key={g}
+                style={[styles.chip, active && { backgroundColor: colors.tint, borderColor: colors.tint }]}
+                onPress={() => {
+                  setSelectedGenres((prev) =>
+                    prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
+                  );
+                }}
+                activeOpacity={0.85}
+              >
+                <ThemedText style={[styles.chipText, active && { color: colors.background }]}>
+                  {g}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
         <TouchableOpacity
           onPress={() => setUsers([...users, ''])}
           activeOpacity={0.7}
           style={{ marginTop: 8, alignSelf: 'flex-start' }}
         >
-          <Text style={{ color: colors.tint, fontWeight: '600' }}>Ajouter un utilisateur</Text>
+          <Text style={{ color: colors.tint, fontWeight: '600' }}>Add user</Text>
         </TouchableOpacity>
       </ThemedView>
 
       <ThemedView style={[styles.card, { borderColor: colors.border }]}>
-        <ThemedText style={styles.label}>Plateforme(s)</ThemedText>
+        <ThemedText style={styles.label}>Platforms</ThemedText>
         <View style={styles.chipsWrap}>
           {PLATFORMS.map((p) => {
             const active = selectedPlatforms.includes(p);
@@ -121,11 +154,11 @@ export default function HomeScreen() {
             );
           })}
         </View>
-        <ThemedText style={styles.helpText}>Sélectionne au moins une plateforme.</ThemedText>
+        <ThemedText style={styles.helpText}>Select at least one platform.</ThemedText>
       </ThemedView>
 
       <ThemedView style={[styles.card, { borderColor: colors.border }]}>
-        <ThemedText style={styles.label}>Durée</ThemedText>
+        <ThemedText style={styles.label}>Duration</ThemedText>
         <View style={styles.segmentWrap}>
           {DURATION_PRESETS.map((d) => {
             const active = durationKey === d.key;
