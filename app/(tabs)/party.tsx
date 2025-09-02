@@ -1,25 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  useWindowDimensions,
   Animated,
+  Image,
+  Text,
   TouchableOpacity,
+  useWindowDimensions,
+  View,
 } from "react-native";
-import io from "socket.io-client"
-
-type Movie = {
-  id: number;
-  name: string;
-  date: number;
-  director: string;
-  poster: string;
-  like: boolean | null;
-};
-
-
+import { type Movie } from "@/libs/types";
+import styles from "@/styles/party_style";
 
 const movieList: Movie[] = [
   {
@@ -28,7 +18,7 @@ const movieList: Movie[] = [
     date: 2010,
     director: "Tim Burton",
     poster: "https://source.unsplash.com/random/400x600?sig=1",
-    like: null,
+    wantToWatch: null,
   },
   {
     id: 2,
@@ -36,7 +26,7 @@ const movieList: Movie[] = [
     date: 2020,
     director: "Christopher Nolan",
     poster: "https://source.unsplash.com/random/400x600?sig=2",
-    like: null,
+    wantToWatch: null,
   },
   {
     id: 3,
@@ -44,7 +34,7 @@ const movieList: Movie[] = [
     date: 1982,
     director: "Steven Spielberg",
     poster: "https://source.unsplash.com/random/400x600?sig=3",
-    like: null,
+    wantToWatch: null,
   },
 ];
 
@@ -53,15 +43,38 @@ const Party = () => {
   const [movies, setMovies] = useState(movieList);
   const position = useRef(new Animated.Value(0)).current;
 
-  const socket = useRef(io("http://localhost:3000")).current;
+  const navigation = useNavigation();
+  const ws = useRef<WebSocket | null>(null);
 
+  // --- Connexion WS ---
   useEffect(() => {
+    ws.current = new WebSocket("ws://localhost:8080/ws");
+
+    ws.current.onopen = () => console.log("✅ WS connected");
+
+    ws.current.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        console.log("📩 message:", msg);
+
+        if (msg.type === "MovieFound") {
+          navigation.navigate("ResultScreen", { movie: msg.data });
+        }
+      } catch (e) {
+        console.error("WS parse error:", e);
+      }
+    };
+
+    ws.current.onerror = (e) => console.error("❌ WS error:", e);
+    ws.current.onclose = () => console.log("🔌 WS closed");
+
     return () => {
-      socket.disconnect(); // cleanup si on quitte l'écran
+      ws.current?.close();
     };
   }, []);
 
   const handleChoice = (isValid: boolean) => {
+    const currentMovie = movies[0]
     Animated.timing(position, {
       toValue: isValid ? width : -width,
       duration: 300,
@@ -69,10 +82,16 @@ const Party = () => {
     }).start(() => {
       setMovies((prev) => {
         const updated = [...prev];
-        updated[0].like = isValid;
+        updated[0].wantToWatch = isValid;
         updated.shift();
         return updated;
       });
+
+      socket.emit("vote", {
+        id: currentMovie.id,
+        wantToWatch: isValid,
+      });
+
       position.setValue(0);
     });
   };
@@ -153,81 +172,5 @@ const Party = () => {
   );
 };
 
-const BUTTON_SIZE = 70;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    paddingTop: 60,
-    backgroundColor: "#f9f9f9",
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  cardStack: {
-    position: "relative",
-  },
-  card: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  image: {
-    width: "100%",
-    height: "85%",
-    resizeMode: "cover",
-  },
-  info: {
-    padding: 16,
-    backgroundColor: "white",
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-  director: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 4,
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    position: "absolute",
-    bottom: 40,
-  },
-  button: {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    borderRadius: BUTTON_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  no: {
-    backgroundColor: "#fda4af",
-  },
-  yes: {
-    backgroundColor: "#4ade80",
-  },
-  buttonText: {
-    fontSize: 30,
-  },
-});
 
 export default Party;
