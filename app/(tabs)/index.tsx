@@ -74,15 +74,12 @@ export default function HomeScreen() {
     >
       <ThemedView style={styles.header}>
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
+          source={require('@/assets/images/logo-icon.png')}
           contentFit="contain"
           style={styles.logo}
         />
         <ThemedText type="title" style={styles.title}>Twin Pick</ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>
-          Find a movie that suits everyone
-        </ThemedText>
-      </ThemedView>
+        </ThemedView>
 
       <ThemedView style={[styles.card, { borderColor: colors.border }]}>
         <ThemedText style={styles.label}>Users</ThemedText>
