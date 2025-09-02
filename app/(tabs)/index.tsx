@@ -67,141 +67,136 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{
-        flexGrow: 1,
-        padding: 20,
-      }}
+      contentContainerStyle={{ flexGrow: 1, padding: 20, paddingBottom: 20 }}
     >
-      <ThemedView style={styles.header}>
-        <Image
-          source={require('@/assets/images/logo-icon.png')}
-          contentFit="contain"
-          style={styles.logo}
-        />
-        <ThemedText type="title" style={styles.title}>Twin Pick</ThemedText>
+      <View style={{ flex: 1 }}>
+        <ThemedView style={styles.header}>
+          <Image
+            source={require('@/assets/images/logo-icon.png')}
+            contentFit="contain"
+            style={styles.logo}
+          />
+          <ThemedText type="title" style={styles.title}>Twin Pick</ThemedText>
         </ThemedView>
 
-      <ThemedView style={[styles.card, { borderColor: colors.border }]}>
-        <ThemedText style={styles.label}>Users</ThemedText>
-        {users.map((user, index) => (
-          <TextInput
-            key={index}
-            style={styles.input}
-            placeholder={`User ${index + 1}`}
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
-            value={user}
-            onChangeText={(text) => {
-              const newUsers = [...users];
-              newUsers[index] = text;
-              setUsers(newUsers);
-            }}
+        <ThemedView style={[styles.card, { borderColor: colors.border }]}>
+          <ThemedText style={styles.label}>Users</ThemedText>
+          {users.map((user, index) => (
+            <TextInput
+              key={index}
+              style={styles.input}
+              placeholder={`User ${index + 1}`}
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              value={user}
+              onChangeText={(text) => {
+                const newUsers = [...users];
+                newUsers[index] = text;
+                setUsers(newUsers);
+              }}
+            />
+          ))}
+          <ThemedText style={[styles.label, { marginTop: 12 }]}>Genres</ThemedText>
+          <View style={styles.chipsWrap}>
+            {GENRES.map((g) => {
+              const active = selectedGenres.includes(g);
+              return (
+                <TouchableOpacity
+                  key={g}
+                  style={[styles.chip, active && { backgroundColor: colors.tint, borderColor: colors.tint }]}
+                  onPress={() => {
+                    setSelectedGenres((prev) =>
+                      prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
+                    );
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <ThemedText style={[styles.chipText, active && { color: colors.background }]}>
+                    {g}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <TouchableOpacity
+            onPress={() => setUsers([...users, ''])}
+            activeOpacity={0.7}
+            style={{ marginTop: 8, alignSelf: 'flex-start' }}
+          >
+            <Text style={{ color: colors.tint, fontWeight: '600' }}>Add user</Text>
+          </TouchableOpacity>
+        </ThemedView>
+
+        <ThemedView style={[styles.card, { borderColor: colors.border }]}>
+          <ThemedText style={styles.label}>Platforms</ThemedText>
+          <View style={styles.chipsWrap}>
+            {PLATFORMS.map((p) => {
+              const active = selectedPlatforms.includes(p);
+              return (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.chip, active && { backgroundColor: colors.tint, borderColor: colors.tint }]}
+                  onPress={() => {
+                    setSelectedPlatforms((prev) =>
+                      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+                    );
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <ThemedText style={[styles.chipText, active && { color: colors.background }]}>
+                    {p}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <ThemedText style={styles.helpText}>Select at least one platform.</ThemedText>
+        </ThemedView>
+
+        <ThemedView style={[styles.card, { borderColor: colors.border }]}>
+          <ThemedText style={styles.label}>Duration</ThemedText>
+          <View style={styles.segmentWrap}>
+            {DURATION_PRESETS.map((d) => {
+              const active = durationKey === d.key;
+              return (
+                <TouchableOpacity
+                  key={d.key}
+                  style={[styles.segment, active && { borderColor: colors.tint, backgroundColor: colors.tint }]}
+                  onPress={() => setDurationKey(d.key)}
+                  activeOpacity={0.85}
+                >
+                  <ThemedText style={[styles.segmentText, active && { color: colors.background }]}>
+                    {d.label}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </ThemedView>
+
+        <View style={styles.modeRow}>
+          <ThemedText style={[styles.modeLabel, mode === 'match' && styles.modeActive]}>Match</ThemedText>
+          <Switch
+            value={mode === 'party'}
+            onValueChange={() => setMode(m => (m === 'match' ? 'party' : 'match'))}
           />
-        ))}
-        <ThemedText style={[styles.label, { marginTop: 12 }]}>Genres</ThemedText>
-        <View style={styles.chipsWrap}>
-          {GENRES.map((g) => {
-            const active = selectedGenres.includes(g);
-            return (
-              <TouchableOpacity
-                key={g}
-                style={[styles.chip, active && { backgroundColor: colors.tint, borderColor: colors.tint }]}
-                onPress={() => {
-                  setSelectedGenres((prev) =>
-                    prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
-                  );
-                }}
-                activeOpacity={0.85}
-              >
-                <ThemedText style={[styles.chipText, active && { color: colors.background }]}>
-                  {g}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
+          <ThemedText style={[styles.modeLabel, mode === 'party' && styles.modeActive]}>Party</ThemedText>
         </View>
+
         <TouchableOpacity
-          onPress={() => setUsers([...users, ''])}
-          activeOpacity={0.7}
-          style={{ marginTop: 8, alignSelf: 'flex-start' }}
+          style={[styles.submitBtn, { backgroundColor: colors.tint }]}
+          onPress={onSubmit}
+          disabled={!canSubmit}
+          activeOpacity={0.9}
         >
-          <Text style={{ color: colors.tint, fontWeight: '600' }}>Add user</Text>
+          <ThemedText style={styles.submitText}>SUBMIT</ThemedText>
         </TouchableOpacity>
-      </ThemedView>
-
-      <ThemedView style={[styles.card, { borderColor: colors.border }]}>
-        <ThemedText style={styles.label}>Platforms</ThemedText>
-        <View style={styles.chipsWrap}>
-          {PLATFORMS.map((p) => {
-            const active = selectedPlatforms.includes(p);
-            return (
-              <TouchableOpacity
-                key={p}
-                style={[styles.chip, active && { backgroundColor: colors.tint, borderColor: colors.tint }]}
-                onPress={() => {
-                  setSelectedPlatforms((prev) =>
-                    prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
-                  );
-                }}
-                activeOpacity={0.85}
-              >
-                <ThemedText style={[styles.chipText, active && { color: colors.background }]}>
-                  {p}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        <ThemedText style={styles.helpText}>Select at least one platform.</ThemedText>
-      </ThemedView>
-
-      <ThemedView style={[styles.card, { borderColor: colors.border }]}>
-        <ThemedText style={styles.label}>Duration</ThemedText>
-        <View style={styles.segmentWrap}>
-          {DURATION_PRESETS.map((d) => {
-            const active = durationKey === d.key;
-            return (
-              <TouchableOpacity
-                key={d.key}
-                style={[styles.segment, active && { borderColor: colors.tint, backgroundColor: colors.tint }]}
-                onPress={() => setDurationKey(d.key)}
-                activeOpacity={0.85}
-              >
-                <ThemedText style={[styles.segmentText, active && { color: colors.background }]}>
-                  {d.label}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </ThemedView>
-
-      <View style={styles.modeRow}>
-        <ThemedText style={[styles.modeLabel, mode === 'match' && styles.modeActive]}>Match</ThemedText>
-        <Switch
-          value={mode === 'party'}
-          onValueChange={() => setMode(m => (m === 'match' ? 'party' : 'match'))}
-        />
-        <ThemedText style={[styles.modeLabel, mode === 'party' && styles.modeActive]}>Party</ThemedText>
       </View>
-
-      <TouchableOpacity
-        style={[styles.submitBtn, { backgroundColor: colors.tint }]}
-        onPress={onSubmit}
-        disabled={!canSubmit}
-        activeOpacity={0.9}
-      >
-        <ThemedText style={styles.submitText}>SUBMIT</ThemedText>
-      </TouchableOpacity>
-
-      <View style={{ height: 28 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     alignItems: 'center',
     marginTop: 12,
@@ -227,13 +222,14 @@ const styles = StyleSheet.create({
   },
   label: { fontWeight: '700', marginBottom: 10 },
   helpText: { opacity: 0.8, marginTop: 8, fontSize: 13 },
+
   modeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     alignSelf: 'stretch',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 12,            // rapproché
   },
   modeLabel: { opacity: 0.8, fontWeight: '600' },
   modeActive: { opacity: 1 },
@@ -273,7 +269,7 @@ const styles = StyleSheet.create({
   segmentText: { fontWeight: '700' },
 
   submitBtn: {
-    marginTop: 16,
+    marginTop: 8,             // rapproché
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
