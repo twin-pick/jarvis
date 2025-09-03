@@ -1,5 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
+import { router } from "expo-router";
 import {
   Animated,
   Image,
@@ -10,6 +11,7 @@ import {
 } from "react-native";
 import { type Movie } from "@/libs/types";
 import styles from "@/styles/party_style";
+import { useRoute } from "@react-navigation/native";
 
 const movieList: Movie[] = [
   {
@@ -38,17 +40,34 @@ const movieList: Movie[] = [
   },
 ];
 
+type RouteParams = {
+  roomId: string;
+};
+
 const Party = () => {
+
+  // const getData = async() => {
+  //   const data = await fetch('http://localhost:8081/api/v2/party/abroudoux,66sceptre')
+  //     .then((value) => {return value})
+  //     .catch((error) => {console.log(`Error: ${error}`)})
+  // }
+  // const validateData = getData();
+  // if(validateData.statusCode == 200){
+  //     console.log(validateData);
+  // }
+  // const roomId = data
+  const route = useRoute();
+  const { roomId } = route.params as RouteParams;
   const { width, height } = useWindowDimensions();
-  const [ movies, setMovies ] = useState<Movie[]>(movieList);
   const [ socketId, setSocketId ] = useState<string>();
+  const [ movies, setMovies ] = useState<Movie[]>(movieList);
   const position = useRef(new Animated.Value(0)).current;
 
   const navigation = useNavigation();
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:8081/ws");
+    ws.current = new WebSocket(`ws://localhost:8081/api/v2/party/room/${roomId}`);
 
     ws.current.onopen = () => console.log("✅ WS connected");
 
@@ -57,9 +76,18 @@ const Party = () => {
         const msg = JSON.parse(event.data);
         console.log("📩 message:", msg);
 
-        // if (msg.type === "MovieFound") {
-        //   navigation.navigate("ResultScreen", { movie: msg.data });
-        // }
+        if (msg.type === "MovieFound") {
+          router.push({
+            pathname:"/twinpick-result",
+            params: msg.data ,
+          })
+        }
+
+        // TODO : Vérif à revoir
+        if (msg.type === "party") {
+          setSocketId(msg.socketId);
+          setMovies(msg.watchlists)
+        }
       } catch (e) {
         console.error("WS parse error:", e);
       }
