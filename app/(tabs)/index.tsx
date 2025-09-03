@@ -48,14 +48,14 @@ export default function HomeScreen() {
   const [durationKey, setDurationKey] = useState<DurationKey>('medium');
 
   function createFetchUrl() : string {
-    let url = "http://localhost:8085/api/v1/match"
-    url += "/" + users.join(',')
+    let url = "http://localhost:8085/api/v1/match?"
+    url += "usernames=" + users.join(',')
        
     if (selectedGenres.length < 0){
-      url = "/" + selectedGenres.join(",")
+      url = "&genres=" + selectedGenres.join(",")
     }
     // if (selectedPlatforms.length < 0){
-    //   url = "/" + selectedPlatforms.join(",")
+    //   url = "&platforms=" + selectedPlatforms.join(",")
     // }
     return url
   }
@@ -63,7 +63,12 @@ export default function HomeScreen() {
   const onSubmit =  async () => {
     const duration = DURATION_PRESETS.find((d) => d.key === durationKey)!;
     const url : string = createFetchUrl()
-    const response : Response = await fetch(url)
+    const response : Response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    },)
     try {
       if (response.ok) {
         const data = await response.json()
