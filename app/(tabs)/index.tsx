@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { resolveScheme } from 'expo-linking';
 
 const PLATFORMS = [
   'Netflix',
@@ -46,20 +47,38 @@ export default function HomeScreen() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [durationKey, setDurationKey] = useState<DurationKey>('medium');
 
-  const onSubmit = () => {
+  function createFetchUrl() : string {
+    let url = "http://localhost:8085/api/v1/match"
+    url += "/" + users.join(',')
+       
+    if (selectedGenres.length < 0){
+      url = "/" + selectedGenres.join(",")
+    }
+    // if (selectedPlatforms.length < 0){
+    //   url = "/" + selectedPlatforms.join(",")
+    // }
+    return url
+  }
+
+  const onSubmit =  async () => {
     const duration = DURATION_PRESETS.find((d) => d.key === durationKey)!;
-    router.push({
-      pathname: '/(tabs)/twinpick-result',
-      params: {
-        mode,
-        users: users.join(','),
-        genres: selectedGenres.join(','),
-        platforms: selectedPlatforms.join(','),
-        durationKey,
-        min: String(duration.min),
-        max: String(duration.max),
-      },
-    });
+    const url : string = createFetchUrl()
+    const response : Response = await fetch(url)
+    try {
+      if (response.ok) {
+        const data = await response.json()
+        console.log(data)
+        router.push({
+          pathname: '/(tabs)/twinpick-result',
+          params: {
+            data: data
+          },
+        });
+      }
+    }
+    catch (error){
+      console.log(error)
+    }
   };
 
   const canSubmit = users.some(u => u.trim() !== '');
