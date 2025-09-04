@@ -51,31 +51,13 @@ type RouteParams = {
 
 const Party = () => {
 
+  const { roomId } = useLocalSearchParams ();
   const { width, height } = useWindowDimensions();
   const [ socketId, setSocketId ] = useState<string>();
   const [ movies, setMovies ] = useState<Movie[]>([]);
+  const setMovie = useMovieStore((state: { setMovie: any; }) => state.setMovie)
   const position = useRef(new Animated.Value(0)).current;
-  const { roomId } = useLocalSearchParams ();
-  const movieResult = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
-  const addMovie = useMovieStore((state: { addMovie: any; }) => state.addMovie)
-
-
   const ws = useRef<WebSocket | null>(null);
-
-  // function createMoviesList(data: JSON){
-  //   const listMovie = JSON.parse(data)
-  //   listMovie.forEach((movie: { id: string; title: string; date: string; director: string; poster: string; duration: string; }) => {
-  //     let newMovie: Movie = {
-  //       id: movie.id,
-  //       title: movie.title,
-  //       date: movie.date,
-  //       director: movie.director,
-  //       poster: movie.poster,
-  //       duration: movie.duration,
-  //       wantToWatch: null
-  //     }
-  //   });
-  // }
 
   useEffect(() => {
     ws.current = new WebSocket(`ws://localhost:8085/api/v2/party/room/${roomId}`);
@@ -98,7 +80,7 @@ const Party = () => {
             poster: data.poster as string,
             wantToWatch: true,
           };
-          addMovie(newMovie);
+          setMovie(newMovie);
           router.push("/(tabs)/twinpick-result");
         }
 
@@ -106,10 +88,10 @@ const Party = () => {
           setSocketId(msg.socketId);
         }
 
-        if (msg.event === 'data'){
-          const listMovie: Movie[] = msg.films
-          setMovies(listMovie);
-        }
+        // if (msg.event === 'data'){
+        //   const listMovie: Movie[] = msg.films
+        //   setMovies(listMovie);
+        // }
       } catch (e) {
         console.error("WS parse error:", e);
       }
