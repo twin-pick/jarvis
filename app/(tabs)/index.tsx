@@ -1,6 +1,6 @@
 import '../../global';
 import { useState } from 'react';
-import { router } from 'expo-router';
+import { RelativePathString, router } from 'expo-router';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Switch, TextInput, Text } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -9,6 +9,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { resolveScheme } from 'expo-linking';
+import { useRoomStore } from '@/store/useRoomStore';
+import { Movie } from '@/libs/types';
 
 const PLATFORMS = [
   'Netflix',
@@ -46,9 +48,10 @@ export default function HomeScreen() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [durationKey, setDurationKey] = useState<DurationKey>('medium');
+  const setRoomId = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
 
-  function createFetchUrl() : string {
-    let url = "http://localhost:8085/api/v1/match?"
+  function createFetchUrl(endpoint : string) : string {
+    let url = `http://localhost:8085/api/${endpoint}`
     url += "usernames=" + users.join(',')
        
     if (selectedGenres.length < 0){
@@ -61,8 +64,17 @@ export default function HomeScreen() {
   }
 
   const onSubmit =  async () => {
+    let endpoint : string 
+    let path : RelativePathString
+    if (mode === 'match') {
+      endpoint = 'v1/match?';
+      path = `/(tabs)/twinpick-result` as RelativePathString;
+    } else {
+      endpoint = 'v2/party?';
+      path = '/(tabs)/party' as RelativePathString;
+    }
     const duration = DURATION_PRESETS.find((d) => d.key === durationKey)!;
-    const url : string = createFetchUrl()
+    const url : string = createFetchUrl(endpoint)
     const response : Response = await fetch(url, {
       method: "GET",
       headers: {
@@ -72,13 +84,20 @@ export default function HomeScreen() {
     try {
       if (response.ok) {
         const data = await response.json()
-        console.log(data)
-        router.push({
-          pathname: '/(tabs)/twinpick-result',
-          params: {
-            data: data
-          },
-        });
+        if (mode === 'match'){
+          const newMovie: Movie = {
+            id: data.id,
+            title: data.title as string,
+            date: data.date as string,
+            director: data.director as string,
+            duration: data.duration as string,
+            poster: data.poster as string,
+            wantToWatch: true,
+          };
+          addMovie(newMovie);
+        }
+        setRoomId(data.roomId);
+        router.push(path);
       }
     }
     catch (error){
@@ -279,7 +298,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'stretch'
   },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
+  submitText: { color: '#d32d2dff', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
 
   input: {
     borderWidth: 1,
@@ -291,3 +310,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 });
+
+function addMovie(newMovie: Movie) {
+  throw new Error('Function not implemented.');
+}

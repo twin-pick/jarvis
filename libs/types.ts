@@ -1,8 +1,9 @@
 export type Movie = {
-  id: number;
-  name: string;
-  date: number;
+  id: string;
+  title: string;
+  date: string;
   director: string;
   poster: string;
+  duration: string;
   wantToWatch: boolean | null;
 };
