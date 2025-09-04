@@ -9,6 +9,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRoomStore } from '@/store/useRoomStore';
+import { useMovieStore } from '@/store/useMovieStore';
 import { Movie } from '@/libs/types';
 
 const PLATFORMS = [
@@ -48,6 +49,7 @@ export default function HomeScreen() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [durationKey, setDurationKey] = useState<DurationKey>('medium');
   const setRoomId = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
+  const addMovie = useMovieStore((state: { addMovie: any }) =>  state.addMovie);
 
   function createFetchUrl(endpoint : string) : string {
     let url = `http://localhost:8085/api/${endpoint}`
@@ -309,7 +311,3 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 });
-
-function addMovie(newMovie: Movie) {
-  throw new Error('Function not implemented.');
-}

@@ -12,6 +12,7 @@ import {
 import { type Movie } from "@/libs/types";
 import styles from "@/styles/party_style";
 import { useRoomStore } from '@/store/useRoomStore';
+import { useMovieStore } from "@/store/useMovieStore";
 
 const movieList: Movie[] = [
   {
@@ -55,6 +56,9 @@ const Party = () => {
   const [ socketId, setSocketId ] = useState<string>();
   const [ movies, setMovies ] = useState<Movie[]>([]);
   const position = useRef(new Animated.Value(0)).current;
+  const movieResult = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
+  const addMovie = useMovieStore((state: { addMovie: any; }) => state.addMovie)
+
 
   const ws = useRef<WebSocket | null>(null);
 
@@ -84,10 +88,19 @@ const Party = () => {
         console.log("📩 message:", msg);
 
         if (msg.event === 'film_selected') {
-          
+          const data = msg.flim
+          const newMovie: Movie = {
+            id: data.id,
+            title: data.title as string,
+            date: data.date as string,
+            director: data.director as string,
+            duration: data.duration as string,
+            poster: data.poster as string,
+            wantToWatch: true,
+          };
+          addMovie(newMovie);
           router.push({
             pathname:"/twinpick-result",
-            params: msg.data ,
           })
         }
 
