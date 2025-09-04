@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import {
@@ -12,7 +11,6 @@ import {
 } from "react-native";
 import { type Movie } from "@/libs/types";
 import styles from "@/styles/party_style";
-import { useRoute } from "@react-navigation/native";
 import { useRoomStore } from '@/store/useRoomStore';
 
 const movieList: Movie[] = [
@@ -51,7 +49,6 @@ type RouteParams = {
 
 const Party = () => {
 
-  const route = useRoute();
   const roomId = useRoomStore((state) => state.roomId);
   console.log(roomId)
   const { width, height } = useWindowDimensions();
@@ -59,7 +56,6 @@ const Party = () => {
   const [ movies, setMovies ] = useState<Movie[]>([]);
   const position = useRef(new Animated.Value(0)).current;
 
-  const navigation = useNavigation();
   const ws = useRef<WebSocket | null>(null);
 
   // function createMoviesList(data: JSON){
@@ -79,7 +75,7 @@ const Party = () => {
 
   useEffect(() => {
     ws.current = new WebSocket(`ws://localhost:8085/api/v2/party/room/${roomId}`);
-
+    
     ws.current.onopen = () => console.log("✅ WS connected");
 
     ws.current.onmessage = (event) => {
@@ -88,6 +84,7 @@ const Party = () => {
         console.log("📩 message:", msg);
 
         if (msg.event === 'film_selected') {
+          
           router.push({
             pathname:"/twinpick-result",
             params: msg.data ,
@@ -100,9 +97,8 @@ const Party = () => {
         }
 
         if (msg.event === 'data'){
-          // createMoviesList(msg)
-          const listMovie: Movie[] = JSON.parse(msg)
-          setMovies(msg.watchlists);
+          const listMovie: Movie[] = msg.films
+          setMovies(listMovie);
         }
       } catch (e) {
         console.error("WS parse error:", e);
@@ -115,7 +111,7 @@ const Party = () => {
     return () => {
       ws.current?.close();
     };
-  }, [roomId, movies]);
+  }, [roomId]);
 
   const handleChoice = (isValid: boolean) => {
     const currentMovie = movies[0]
