@@ -12,6 +12,8 @@ import {
 import { type Movie } from "@/libs/types";
 import styles from "@/styles/party_style";
 import { useRoomStore } from '@/store/useRoomStore';
+import { useMovieStore } from "@/store/useMovieStore";
+import { useLocalSearchParams } from "expo-router";
 
 const movieList: Movie[] = [
   {
@@ -49,12 +51,14 @@ type RouteParams = {
 
 const Party = () => {
 
-  const roomId = useRoomStore((state) => state.roomId);
-  console.log(roomId)
   const { width, height } = useWindowDimensions();
   const [ socketId, setSocketId ] = useState<string>();
   const [ movies, setMovies ] = useState<Movie[]>([]);
   const position = useRef(new Animated.Value(0)).current;
+  const { roomId } = useLocalSearchParams ();
+  const movieResult = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
+  const addMovie = useMovieStore((state: { addMovie: any; }) => state.addMovie)
+
 
   const ws = useRef<WebSocket | null>(null);
 
@@ -84,14 +88,20 @@ const Party = () => {
         console.log("📩 message:", msg);
 
         if (msg.event === 'film_selected') {
-          
-          router.push({
-            pathname:"/twinpick-result",
-            params: msg.data ,
-          })
+          const data = msg.film;
+          const newMovie: Movie = {
+            id: data.id,
+            title: data.title as string,
+            date: data.date as string,
+            director: data.director as string,
+            duration: data.duration as string,
+            poster: data.poster as string,
+            wantToWatch: true,
+          };
+          addMovie(newMovie);
+          router.push("/(tabs)/twinpick-result");
         }
 
-        // TODO : Vérif à revoir
         if (msg.event === 'identification') {
           setSocketId(msg.socketId);
         }
