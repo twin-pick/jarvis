@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import {
+  ActivityIndicator,
   Animated,
   Image,
   Text,
@@ -12,30 +13,34 @@ import {
 import { type Movie } from "@/libs/types";
 import styles from "@/styles/party_style";
 import { useRoute } from "@react-navigation/native";
+import { useRoomStore } from '@/store/useRoomStore';
 
 const movieList: Movie[] = [
   {
-    id: 1,
-    name: "Alice au Pays des Merveille",
-    date: 2010,
+    id: "1",
+    title: "Alice au Pays des Merveille",
+    date: "2010",
     director: "Tim Burton",
     poster: "https://source.unsplash.com/random/400x600?sig=1",
+    duration: "2h30",
     wantToWatch: null,
   },
   {
-    id: 2,
-    name: "Tennet",
-    date: 2020,
+    id: "2",
+    title: "Tennet",
+    date: "2020",
     director: "Christopher Nolan",
     poster: "https://source.unsplash.com/random/400x600?sig=2",
+    duration: "2h15",
     wantToWatch: null,
   },
   {
-    id: 3,
-    name: "E.T",
-    date: 1982,
+    id: "3",
+    title: "E.T",
+    date: "1982",
     director: "Steven Spielberg",
     poster: "https://source.unsplash.com/random/400x600?sig=3",
+    duration: "1h35",
     wantToWatch: null,
   },
 ];
@@ -46,28 +51,34 @@ type RouteParams = {
 
 const Party = () => {
 
-  // const getData = async() => {
-  //   const data = await fetch('http://localhost:8081/api/v2/party/abroudoux,66sceptre')
-  //     .then((value) => {return value})
-  //     .catch((error) => {console.log(`Error: ${error}`)})
-  // }
-  // const validateData = getData();
-  // if(validateData.statusCode == 200){
-  //     console.log(validateData);
-  // }
-  // const roomId = data
   const route = useRoute();
-  const { roomId } = route.params as RouteParams;
+  const roomId = useRoomStore((state) => state.roomId);
+  console.log(roomId)
   const { width, height } = useWindowDimensions();
   const [ socketId, setSocketId ] = useState<string>();
-  const [ movies, setMovies ] = useState<Movie[]>(movieList);
+  const [ movies, setMovies ] = useState<Movie[]>([]);
   const position = useRef(new Animated.Value(0)).current;
 
   const navigation = useNavigation();
   const ws = useRef<WebSocket | null>(null);
 
+  // function createMoviesList(data: JSON){
+  //   const listMovie = JSON.parse(data)
+  //   listMovie.forEach((movie: { id: string; title: string; date: string; director: string; poster: string; duration: string; }) => {
+  //     let newMovie: Movie = {
+  //       id: movie.id,
+  //       title: movie.title,
+  //       date: movie.date,
+  //       director: movie.director,
+  //       poster: movie.poster,
+  //       duration: movie.duration,
+  //       wantToWatch: null
+  //     }
+  //   });
+  // }
+
   useEffect(() => {
-    ws.current = new WebSocket(`ws://localhost:8081/api/v2/party/room/${roomId}`);
+    ws.current = new WebSocket(`ws://localhost:8085/api/v2/party/room/${roomId}`);
 
     ws.current.onopen = () => console.log("✅ WS connected");
 
@@ -76,7 +87,7 @@ const Party = () => {
         const msg = JSON.parse(event.data);
         console.log("📩 message:", msg);
 
-        if (msg.type === "MovieFound") {
+        if (msg.event === 'film_selected') {
           router.push({
             pathname:"/twinpick-result",
             params: msg.data ,
@@ -84,9 +95,14 @@ const Party = () => {
         }
 
         // TODO : Vérif à revoir
-        if (msg.type === "party") {
+        if (msg.event === 'identification') {
           setSocketId(msg.socketId);
-          setMovies(msg.watchlists)
+        }
+
+        if (msg.event === 'data'){
+          // createMoviesList(msg)
+          const listMovie: Movie[] = JSON.parse(msg)
+          setMovies(msg.watchlists);
         }
       } catch (e) {
         console.error("WS parse error:", e);
@@ -99,7 +115,7 @@ const Party = () => {
     return () => {
       ws.current?.close();
     };
-  }, []);
+  }, [roomId, movies]);
 
   const handleChoice = (isValid: boolean) => {
     const currentMovie = movies[0]
@@ -126,6 +142,13 @@ const Party = () => {
       position.setValue(0);
     });
   };
+  if (movieList.length == 0) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -156,7 +179,7 @@ const Party = () => {
                   <Image source={{ uri: movie.poster }} style={styles.image} />
                   <View style={styles.info}>
                     <Text style={styles.name}>
-                      {movie.name} ({movie.date})
+                      {movie.title} ({movie.date})
                     </Text>
                     <Text style={styles.director}>{movie.director}</Text>
                   </View>
@@ -177,7 +200,7 @@ const Party = () => {
                   <Image source={{ uri: movie.poster }} style={styles.image} />
                   <View style={styles.info}>
                     <Text style={styles.name}>
-                      {movie.name} ({movie.date})
+                      {movie.title} ({movie.date})
                     </Text>
                     <Text style={styles.director}>{movie.director}</Text>
                   </View>
