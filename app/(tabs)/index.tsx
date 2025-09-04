@@ -96,9 +96,14 @@ export default function HomeScreen() {
             wantToWatch: true,
           };
           addMovie(newMovie);
+          router.push(path);
         }
-        setRoomId(data.roomId);
-        router.push(path);
+        router.push({
+          pathname: path,
+          params: {
+            roomId: data.roomId
+          }
+        })
       }
     }
     catch (error){

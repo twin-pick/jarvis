@@ -13,6 +13,7 @@ import { type Movie } from "@/libs/types";
 import styles from "@/styles/party_style";
 import { useRoomStore } from '@/store/useRoomStore';
 import { useMovieStore } from "@/store/useMovieStore";
+import { useLocalSearchParams } from "expo-router";
 
 const movieList: Movie[] = [
   {
@@ -50,12 +51,11 @@ type RouteParams = {
 
 const Party = () => {
 
-  const roomId = useRoomStore((state) => state.roomId);
-  console.log(roomId)
   const { width, height } = useWindowDimensions();
   const [ socketId, setSocketId ] = useState<string>();
   const [ movies, setMovies ] = useState<Movie[]>([]);
   const position = useRef(new Animated.Value(0)).current;
+  const { roomId } = useLocalSearchParams ();
   const movieResult = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
   const addMovie = useMovieStore((state: { addMovie: any; }) => state.addMovie)
 
@@ -88,7 +88,7 @@ const Party = () => {
         console.log("📩 message:", msg);
 
         if (msg.event === 'film_selected') {
-          const data = msg.flim
+          const data = msg.film;
           const newMovie: Movie = {
             id: data.id,
             title: data.title as string,
@@ -99,12 +99,9 @@ const Party = () => {
             wantToWatch: true,
           };
           addMovie(newMovie);
-          router.push({
-            pathname:"/twinpick-result",
-          })
+          router.push("/(tabs)/twinpick-result");
         }
 
-        // TODO : Vérif à revoir
         if (msg.event === 'identification') {
           setSocketId(msg.socketId);
         }
