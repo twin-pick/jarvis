@@ -8,7 +8,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { resolveScheme } from 'expo-linking';
 import { useRoomStore } from '@/store/useRoomStore';
 import { Movie } from '@/libs/types';
 
