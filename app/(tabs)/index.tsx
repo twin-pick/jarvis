@@ -1,7 +1,7 @@
 import '../../global';
 import { useState } from 'react';
 import { RelativePathString, router } from 'expo-router';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Switch, TextInput, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Switch, TextInput, Text } from 'react-native';
 import { Image } from 'expo-image';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -48,6 +48,7 @@ export default function HomeScreen() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [durationKey, setDurationKey] = useState<DurationKey>('long');
+  const [isLoading, setIsLoading] = useState(false);
   const setMovie = useMovieStore((state: { setMovie: any }) =>  state.setMovie);
 
   function createFetchUrl(endpoint : string) : string {
@@ -64,6 +65,7 @@ export default function HomeScreen() {
   }
 
   const onSubmit =  async () => {
+    setIsLoading(true);
     let endpoint : string 
     let path : RelativePathString
     if (mode === 'match') {
@@ -110,6 +112,8 @@ export default function HomeScreen() {
     }
     catch (error){
       console.log(error)
+    } finally {
+    setIsLoading(false);
     }
   };
 
@@ -233,12 +237,16 @@ export default function HomeScreen() {
       </ThemedView>
 
       <TouchableOpacity
-        style={[styles.submitBtn, { backgroundColor: colors.tint }, !canSubmit && { opacity: 0.5 }]}
+        style={[styles.submitBtn, { backgroundColor: colors.tint }, (!canSubmit || isLoading) && { opacity: 0.5 }]}
         onPress={onSubmit}
-        disabled={!canSubmit}
+        disabled={!canSubmit || isLoading}
         activeOpacity={0.9}
       >
-        <ThemedText style={styles.submitText}>SUBMIT</ThemedText>
+        {isLoading ? (
+          <ActivityIndicator size="small" color={colors.background} />
+        ) : (
+          <ThemedText style={styles.submitText}>SUBMIT</ThemedText>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
