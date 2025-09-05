@@ -1,16 +1,14 @@
-import '../../global';
-import { useState } from 'react';
+import { Image } from 'expo-image';
 import { RelativePathString, router } from 'expo-router';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Switch, TextInput, Text } from 'react-native';
-import { Image } from 'expo-image';
+import '../../global';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useRoomStore } from '@/store/useRoomStore';
-import { useMovieStore } from '@/store/useMovieStore';
 import { Movie } from '@/libs/types';
+import { useMovieStore } from '@/store/useMovieStore';
 
 const PLATFORMS = [
   'Netflix',
@@ -67,6 +65,7 @@ export default function HomeScreen() {
   const onSubmit =  async () => {
     setIsLoading(true);
     let endpoint : string 
+
     let path : RelativePathString
     if (mode === 'match') {
       endpoint = 'v1/match?';
@@ -75,6 +74,8 @@ export default function HomeScreen() {
       endpoint = 'v2/party?';
       path = '/(tabs)/party' as RelativePathString;
     }
+    /*path = `/(tabs)/party-result` as RelativePathString;
+    router.push(path)*/
     const duration = DURATION_PRESETS.find((d) => d.key === durationKey)!;
     const url : string = createFetchUrl(endpoint)
     const response : Response = await fetch(url, {
