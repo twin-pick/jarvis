@@ -31,9 +31,9 @@ const GENRES = [
 ];
 
 const DURATION_PRESETS = [
-  { key: 'short', label: '< 90 min', min: 0, max: 89 },
-  { key: 'medium', label: '90 – 120 min', min: 90, max: 120 },
-  { key: 'long', label: '> 120 min', min: 121, max: 600 },
+  { key: 'short', label: '– de 1h40' },
+  { key: 'medium', label: '– de 2h15' },
+  { key: 'long', label: '+ de 2h15' },
 ] as const;
 
 type Mode = 'match' | 'party';
@@ -42,14 +42,13 @@ type DurationKey = typeof DURATION_PRESETS[number]['key'];
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-
+  
   const [mode, setMode] = useState<Mode>('match');
   const [users, setUsers] = useState<string[]>(['']);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [durationKey, setDurationKey] = useState<DurationKey>('medium');
-  const setRoomId = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
-  const addMovie = useMovieStore((state: { addMovie: any }) =>  state.addMovie);
+  const [durationKey, setDurationKey] = useState<DurationKey>('long');
+  const setMovie = useMovieStore((state: { setMovie: any }) =>  state.setMovie);
 
   function createFetchUrl(endpoint : string) : string {
     let url = `http://localhost:8085/api/${endpoint}`
@@ -95,15 +94,18 @@ export default function HomeScreen() {
             poster: data.poster as string,
             wantToWatch: true,
           };
-          addMovie(newMovie);
+          setMovie(newMovie);
+          console.log("new movie = " + newMovie)
           router.push(path);
         }
-        router.push({
-          pathname: path,
-          params: {
-            roomId: data.roomId
-          }
-        })
+        else{
+          router.push({
+            pathname: path,
+            params: {
+              roomId: data.roomId
+            }
+          })
+        }
       }
     }
     catch (error){
