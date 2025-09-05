@@ -1,7 +1,6 @@
 import { Movie } from '../libs/types';
  
 export default function DisplayFilm(film: Movie, votes : string) {
-    console.log(film.poster)
     return (
         <div
         style={{

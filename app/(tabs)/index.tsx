@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { RelativePathString, router } from 'expo-router';
+import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Switch, TextInput, Text } from 'react-native';
 import '../../global';
 
@@ -48,7 +49,6 @@ export default function HomeScreen() {
   const [durationKey, setDurationKey] = useState<DurationKey>('long');
   const [isLoading, setIsLoading] = useState(false);
   const setMovie = useMovieStore((state: { setMovie: any }) =>  state.setMovie);
-
   function createFetchUrl(endpoint : string) : string {
     let url = `http://localhost:8085/api/${endpoint}`
     url += "usernames=" + users.join(',')
