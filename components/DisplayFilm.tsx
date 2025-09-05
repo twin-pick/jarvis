@@ -5,7 +5,7 @@ export default function DisplayFilm(film : Movie){
     console.log("flim: " + film);
     console.log(film.title, film.poster, film.director, film.date, film.duration)
     return (
-        <div style={{color : 'white'}}>
+        <div style={{backgroundColor: 'black',color : 'white'}}>
           {film.poster && (
             <Image
               source={{ uri: film.poster as string }}
