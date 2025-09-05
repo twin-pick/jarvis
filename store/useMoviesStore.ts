@@ -8,7 +8,7 @@ type MovieState = {
   clearMovies: () => void;
 };
 
-export const useMovieStore = create<MovieState>((set) => ({
+export const useMoviesStore = create<MovieState>((set) => ({
   movies: [],
   addMovie: (movie) =>
     set((state) => ({
