@@ -14,68 +14,23 @@ import styles from "@/styles/party_style";
 import { useRoomStore } from '@/store/useRoomStore';
 import { useMovieStore } from "@/store/useMovieStore";
 import { useLocalSearchParams } from "expo-router";
-
-const movieList: Movie[] = [
-  {
-    id: "1",
-    title: "Alice au Pays des Merveille",
-    date: "2010",
-    director: "Tim Burton",
-    poster: "https://source.unsplash.com/random/400x600?sig=1",
-    duration: "2h30",
-    wantToWatch: null,
-  },
-  {
-    id: "2",
-    title: "Tennet",
-    date: "2020",
-    director: "Christopher Nolan",
-    poster: "https://source.unsplash.com/random/400x600?sig=2",
-    duration: "2h15",
-    wantToWatch: null,
-  },
-  {
-    id: "3",
-    title: "E.T",
-    date: "1982",
-    director: "Steven Spielberg",
-    poster: "https://source.unsplash.com/random/400x600?sig=3",
-    duration: "1h35",
-    wantToWatch: null,
-  },
-];
-
+import { usePartyStore } from "@/store/usePartyStore";
+ 
 type RouteParams = {
   roomId: string;
 };
 
 const Party = () => {
 
+  const { roomId } = useLocalSearchParams ();
   const { width, height } = useWindowDimensions();
   const [ socketId, setSocketId ] = useState<string>();
   const [ movies, setMovies ] = useState<Movie[]>([]);
+  const setMovie = useMovieStore((state: { setMovie: any; }) => state.setMovie)
+  const addMovie = usePartyStore((state : { addMovie: any }) => state.addMovie)
+  const cleanMovies = usePartyStore((state: { cleanMovies: any }) => state.cleanMovies)
   const position = useRef(new Animated.Value(0)).current;
-  const { roomId } = useLocalSearchParams ();
-  const movieResult = useRoomStore((state: { setRoomId: any; }) => state.setRoomId);
-  const addMovie = useMovieStore((state: { addMovie: any; }) => state.addMovie)
-
-
   const ws = useRef<WebSocket | null>(null);
-
-  // function createMoviesList(data: JSON){
-  //   const listMovie = JSON.parse(data)
-  //   listMovie.forEach((movie: { id: string; title: string; date: string; director: string; poster: string; duration: string; }) => {
-  //     let newMovie: Movie = {
-  //       id: movie.id,
-  //       title: movie.title,
-  //       date: movie.date,
-  //       director: movie.director,
-  //       poster: movie.poster,
-  //       duration: movie.duration,
-  //       wantToWatch: null
-  //     }
-  //   });
-  // }
 
   useEffect(() => {
     ws.current = new WebSocket(`ws://localhost:8085/api/v2/party/room/${roomId}`);
@@ -98,7 +53,7 @@ const Party = () => {
             poster: data.poster as string,
             wantToWatch: true,
           };
-          addMovie(newMovie);
+          setMovie(newMovie);
           router.push("/(tabs)/twinpick-result");
         }
 
@@ -106,10 +61,19 @@ const Party = () => {
           setSocketId(msg.socketId);
         }
 
+        if (msg.event === 'results') {
+          cleanMovies()
+          msg.results.map((result: {film:Movie, votes:string}[]) => {
+            addMovie(result)
+          })
+          router.push("/(tabs)/party-result");
+        }
+
         if (msg.event === 'data'){
           const listMovie: Movie[] = msg.films
           setMovies(listMovie);
         }
+
       } catch (e) {
         console.error("WS parse error:", e);
       }
@@ -148,7 +112,9 @@ const Party = () => {
       position.setValue(0);
     });
   };
-  if (movieList.length == 0) {
+
+  if (movies.length === 0) {
+    console.log("fini")
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#007bff" />

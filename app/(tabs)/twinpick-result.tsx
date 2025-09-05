@@ -1,20 +1,19 @@
-// app/(tabs)/twinpick-result.tsx
-import { useLocalSearchParams } from 'expo-router';
-import { View, Text, Image, ScrollView } from 'react-native';
-
+import DisplayFilm from '@/components/DisplayFilm';
+import { useMovieStore } from '@/store/useMovieStore';
+import { ScrollView } from 'react-native';
+import { Movie } from '@/libs/types';
+ 
 export default function TwinPickResultScreen() {
-  const { title, posterUrl } = useLocalSearchParams();
-
+  const movie = useMovieStore((state) => state.movies);
+  console.log("la data du result : ");
+  console.log(movie);
+ 
+ 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, alignItems: 'center' }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>{title}</Text>
-      {posterUrl && (
-        <Image
-          source={{ uri: posterUrl as string }}
-          style={{ width: 200, height: 300, borderRadius: 12 }}
-          resizeMode="cover"
-        />
-      )}
+    <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, alignItems: 'center'}}>
+      {
+        DisplayFilm(movie!)
+      }
     </ScrollView>
   );
 }
