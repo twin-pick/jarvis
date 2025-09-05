@@ -88,10 +88,11 @@ const Party = () => {
           setSocketId(msg.socketId);
         }
 
-        // if (msg.event === 'data'){
-        //   const listMovie: Movie[] = msg.films
-        //   setMovies(listMovie);
-        // }
+        if (msg.event === 'data'){
+          const listMovie: Movie[] = msg.films
+          setMovies(listMovie);
+        }
+
       } catch (e) {
         console.error("WS parse error:", e);
       }
@@ -130,7 +131,9 @@ const Party = () => {
       position.setValue(0);
     });
   };
-  if (movieList.length == 0) {
+
+  if (movies.length === 0) {
+    console.log("fini")
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#007bff" />
