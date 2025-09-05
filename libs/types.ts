@@ -7,3 +7,8 @@ export type Movie = {
   duration: string;
   wantToWatch: boolean | null;
 };
+
+export type Result = {
+  film : Movie;
+  votes : string;
+}
